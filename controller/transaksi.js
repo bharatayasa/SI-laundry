@@ -88,9 +88,9 @@ module.exports = {
         }
     }, 
     addTransaksi: async (req, res) => {
-        const { id_harga, id_pakaian, id_pelanggan, tanggal_masuk, pelanggan_transaksi, berat_transaksi, tanggal_selesai, status_transaksi } = req.body;
+        const { id_harga, id_pakaian, id_pelanggan, tanggal_masuk, berat_transaksi, tanggal_selesai, status_transaksi } = req.body;
 
-        if (!id_harga || !id_pakaian || !id_pelanggan || !tanggal_masuk || !pelanggan_transaksi || !berat_transaksi || !tanggal_selesai || !status_transaksi) {
+        if (!id_harga || !id_pakaian || !id_pelanggan || !tanggal_masuk || !berat_transaksi || !tanggal_selesai || !status_transaksi) {
             return res.status(400).json({
                 success: false,
                 message: 'Please provide all required fields'
@@ -119,11 +119,11 @@ module.exports = {
             const harga_perkilo = hargaResult[0].harga_perkilo;
             const transaksi_harga = berat_transaksi * harga_perkilo;
 
-            const sql = `INSERT INTO transaksi (id_harga, id_pakaian, id_pelanggan, tanggal_masuk, pelanggan_transaksi, harga_transaksi, berat_transaksi, tanggal_selesai, status_transaksi, transaksi_harga) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            const sql = `INSERT INTO transaksi (id_harga, id_pakaian, id_pelanggan, tanggal_masuk, harga_transaksi, berat_transaksi, tanggal_selesai, status_transaksi, transaksi_harga) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
             const transaksi = await new Promise((resolve, reject) => {
-                connection.query(sql, [id_harga, id_pakaian, id_pelanggan, tanggal_masuk, pelanggan_transaksi, transaksi_harga, berat_transaksi, tanggal_selesai, status_transaksi, transaksi_harga], (error, result) => {
+                connection.query(sql, [id_harga, id_pakaian, id_pelanggan, tanggal_masuk, transaksi_harga, berat_transaksi, tanggal_selesai, status_transaksi, transaksi_harga], (error, result) => {
                     if (error) {
                         console.error("Error inserting transaksi:", error);
                         return reject(error);
@@ -141,7 +141,6 @@ module.exports = {
                     id_pakaian,
                     id_pelanggan,
                     tanggal_masuk,
-                    pelanggan_transaksi,
                     berat_transaksi,
                     tanggal_selesai,
                     status_transaksi,
@@ -158,9 +157,9 @@ module.exports = {
     },
     updateTransaksi: async (req, res) => {
         const id = req.params.id
-        const { id_transaksi, id_harga, id_pakaian, id_pelanggan, tanggal_masuk, pelanggan_transaksi, berat_transaksi, tanggal_selesai, status_transaksi } = req.body;
+        const { id_transaksi, id_harga, id_pakaian, id_pelanggan, tanggal_masuk, berat_transaksi, tanggal_selesai, status_transaksi } = req.body;
 
-        if (!id_transaksi || !id_harga || !id_pakaian || !id_pelanggan || !tanggal_masuk || !pelanggan_transaksi || !berat_transaksi || !tanggal_selesai || !status_transaksi) {
+        if (!id_transaksi || !id_harga || !id_pakaian || !id_pelanggan || !tanggal_masuk || !berat_transaksi || !tanggal_selesai || !status_transaksi) {
             return res.status(400).json({
                 success: false,
                 message: 'Please provide all required fields'
@@ -190,10 +189,10 @@ module.exports = {
             const transaksi_harga = berat_transaksi * harga_perkilo;
 
             const sql = `UPDATE transaksi 
-                        SET id_harga = ?, id_pakaian = ?, id_pelanggan = ?, tanggal_masuk = ?, pelanggan_transaksi = ?, berat_transaksi = ?, tanggal_selesai = ?, status_transaksi = ?, transaksi_harga = ? WHERE id_transaksi = ?`;
+                        SET id_harga = ?, id_pakaian = ?, id_pelanggan = ?, tanggal_masuk = ?, berat_transaksi = ?, tanggal_selesai = ?, status_transaksi = ?, transaksi_harga = ? WHERE id_transaksi = ?`;
 
             const transaksi = await new Promise((resolve, reject) => {
-                connection.query(sql, [id_harga, id_pakaian, id_pelanggan, tanggal_masuk, pelanggan_transaksi, berat_transaksi, tanggal_selesai, status_transaksi, transaksi_harga, id], (error, result) => {
+                connection.query(sql, [id_harga, id_pakaian, id_pelanggan, tanggal_masuk, berat_transaksi, tanggal_selesai, status_transaksi, transaksi_harga, id], (error, result) => {
                     if (error) {
                         console.error("Error updating transaksi:", error);
                         return reject(error);
@@ -218,7 +217,6 @@ module.exports = {
                     id_pakaian,
                     id_pelanggan,
                     tanggal_masuk,
-                    pelanggan_transaksi,
                     berat_transaksi,
                     tanggal_selesai,
                     status_transaksi,
@@ -306,43 +304,49 @@ module.exports = {
 
             const transaksi = transaksiResult[0];
 
-            const doc = new PDFDocument();
+            const doc = new PDFDocument({ margin: 50 });
 
             res.setHeader('Content-Type', 'application/pdf');
             res.setHeader('Content-Disposition', `attachment; filename=invoice_${id}_${transaksi.nama_pelanggan}_${moment(transaksi.tanggal_selesai).format('YYYYMMDD')}.pdf`);
 
             doc.pipe(res);
 
-            doc.fontSize(20).text(`Invoice`, {
-                align: 'center'
-            });
-
+            doc.fontSize(20).text('Laundry Service Invoice', { align: 'center' });
+            doc.moveDown();
+            doc.fontSize(12).text('Laundry Service Company', { align: 'center' });
+            doc.text('Jl. Example No.123, Kota Example', { align: 'center' });
+            doc.text('Phone: (021) 12345678', { align: 'center' });
             doc.moveDown();
 
-            const table = [
-                ['Nama Pelanggan:', transaksi.nama_pelanggan],
-                ['Tanggal Masuk:', moment(transaksi.tanggal_masuk).format('DD MMMM YYYY')],
-                ['Tanggal Selesai:', moment(transaksi.tanggal_selesai).format('DD MMMM YYYY')],
-                [''],
-                ['Berat Transaksi (kg):', `${transaksi.berat_transaksi} kg`],
-                ['Harga 1 Kilo:', formatRupiah(transaksi.harga_perkilo)],
-                ['Total Harga:', formatRupiah(transaksi.transaksi_harga)],
-                ['Status:', transaksi.status_transaksi],
-                [''],
-            ];
+            doc.fontSize(12).text(`Invoice ID: ${id}`, { align: 'left' });
+            doc.text(`Nama Pelanggan: ${transaksi.nama_pelanggan}`, { align: 'left' });
+            doc.text(`Tanggal Masuk: ${moment(transaksi.tanggal_masuk).format('DD MMMM YYYY')}`, { align: 'left' });
+            doc.text(`Tanggal Selesai: ${moment(transaksi.tanggal_selesai).format('DD MMMM YYYY')}`, { align: 'left' });
+            doc.moveDown();
 
-            const tableTop = 150;
-            const itemMargin = 30;
+            doc.fontSize(12).text('Rincian Transaksi:', { align: 'left' });
+            doc.moveDown();
+
+            const tableTop = 250;
+            const itemMargin = 20;
             let y = tableTop;
 
-            doc.fontSize(12).text(table[0][0], 50, y);
-            doc.fontSize(12).text(table[0][1], 300, y);
+            const table = [
+                ['Deskripsi', 'Detail'],
+                ['Harga 1 kg:', formatRupiah(transaksi.harga_perkilo)],
+                ['Berat Transaksi (kg):', `${transaksi.berat_transaksi} kg`],
+                ['Total Harga:', formatRupiah(transaksi.transaksi_harga)],
+                ['Status:', transaksi.status_transaksi],
+            ];
+
+            doc.fontSize(10).text(table[0][0], 50, y);
+            doc.text(table[0][1], 300, y);
 
             y += itemMargin;
 
             for (let i = 1; i < table.length; i++) {
                 doc.fontSize(10).text(table[i][0], 50, y);
-                doc.fontSize(10).text(table[i][1], 300, y);
+                doc.text(table[i][1], 300, y);
                 y += itemMargin;
             }
 
