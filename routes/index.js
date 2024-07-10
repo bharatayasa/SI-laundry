@@ -26,5 +26,8 @@ router.get('/pakaian', AccessToken, pakaian.getAllPakaian);
 const pelanggan = require('../controller/pelanggan');
 router.get('/pelanggan', AccessToken, pelanggan.getAllPelanggan);
 router.get('/pelanggan/:id', AccessToken, pelanggan.getPelangganById);
+router.post('/pelanggan', AccessToken, pelanggan.inputPelanggan);
+router.put('/pelanggan/:id', AccessToken, pelanggan.updatePelanggan);
+router.delete('/pelanggan/:id', AccessToken, pelanggan.deletePelanggan);
 
 module.exports = router;
