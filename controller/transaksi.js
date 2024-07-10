@@ -1,9 +1,17 @@
 const connection = require('../config/database')
+const PDFDocument = require('pdfkit');
+const moment = require('moment');
+
+const formatRupiah = (angka) => {
+    if (typeof angka !== 'number') {
+        angka = parseFloat(angka);
+    }
+    return angka.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
+};
 
 module.exports = {
     getAllTransaction: async (req, res) => {
-        const sql = `
-            SELECT t.*, (t.berat_transaksi * h.harga_perkilo) AS transaksi_harga FROM transaksi t JOIN harga h ON t.id_harga = h.id_harga`;
+        const sql = "SELECT t.*, (t.berat_transaksi * h.harga_perkilo) AS transaksi_harga FROM transaksi t JOIN harga h ON t.id_harga = h.id_harga WHERE id_transaksi = ?"
 
         try {
             const transaksi = await new Promise((resolve, reject) => {
@@ -38,7 +46,7 @@ module.exports = {
     },
     getAllTransactionById: async (req, res) => {
         const id = req.params.id
-        const sql = "SELECT * FROM transaksi WHERE id_transaksi = ?"
+        const sql = "SELECT t.*, (t.berat_transaksi * h.harga_perkilo) AS transaksi_harga FROM transaksi t JOIN harga h ON t.id_harga = h.id_harga WHERE id_transaksi = ?"
 
         try {
             const transaksi = await new Promise((resolve, reject) => {
@@ -238,6 +246,106 @@ module.exports = {
             })
         } catch (error) {
             console.error("Error updating transaksi:", error);
+            return res.status(500).json({
+                success: false,
+                message: 'Internal server error'
+            });
+        }
+    }, 
+    generateTransaksiPDF: async (req, res) => {
+        const id = req.params.id;
+        const sql = "SELECT t.*, (t.berat_transaksi * h.harga_perkilo) AS transaksi_harga FROM transaksi t JOIN harga h ON t.id_harga = h.id_harga WHERE t.id_transaksi = ?";
+        const sqlHarga = "SELECT * FROM harga";
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide id_transaksi'
+            });
+        }
+
+        try {
+            const transaksiResult = await new Promise((resolve, reject) => {
+                connection.query(sql, [id], (error, results) => {
+                    if (error) {
+                        console.error("Error fetching transaksi:", error);
+                        return reject(error);
+                    }
+                    resolve(results);
+                });
+            });
+
+            const harga = await new Promise((resolve, reject) => {
+                connection.query(sqlHarga, (error, results) => {
+                    if (error) {
+                        console.error("Error fetching harga:", error);
+                        return reject(error);
+                    }
+                    resolve(results);
+                });
+            });
+
+            if (transaksiResult.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No transaksi found with the provided id_transaksi'
+                });
+            }
+
+            if (harga.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No harga found'
+                });
+            }
+
+            const transaksi = transaksiResult[0];
+            const hargaKiloan = harga[0];
+
+            const doc = new PDFDocument();
+
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename=transaksi_${id}.pdf`);
+
+            doc.pipe(res);
+
+            doc.fontSize(20).text(`Invoice`, {
+                align: 'center'
+            });
+
+            doc.moveDown();
+
+            const table = [
+                ['Nama Pelanggan:', transaksi.pelanggan_transaksi],
+                ['Tanggal Masuk:', moment(transaksi.tanggal_masuk).format('ddd - MMM - DD - YYYY')],
+                ['Tanggal Selesai:', moment(transaksi.tanggal_selesai).format('ddd - MMM - DD - YYYY')],
+                [''],
+                ['Berat Transaksi (kg):', `${transaksi.berat_transaksi} kg`],
+                ['Harga 1 Kilo:', formatRupiah(hargaKiloan.harga_perkilo)],
+                ['Total Harga:', formatRupiah(transaksi.transaksi_harga)],
+                ['Status:', transaksi.status_transaksi],
+                [''],
+            ];
+
+            const tableTop = 150;
+            const itemMargin = 30;
+            let y = tableTop;
+
+            doc.fontSize(12).text(table[0][0], 50, y);
+            doc.fontSize(12).text(table[0][1], 300, y);
+
+            y += itemMargin;
+
+            for (let i = 1; i < table.length; i++) {
+                doc.fontSize(10).text(table[i][0], 50, y);
+                doc.fontSize(10).text(table[i][1], 300, y);
+                y += itemMargin;
+            }
+
+            doc.end();
+
+        } catch (error) {
+            console.error("Error generating PDF:", error);
             return res.status(500).json({
                 success: false,
                 message: 'Internal server error'
