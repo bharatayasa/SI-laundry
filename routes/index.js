@@ -22,6 +22,10 @@ router.put('/harga/:id', AccessToken, harga.editHarga);
 
 const pakaian = require('../controller/pakaian');
 router.get('/pakaian', AccessToken, pakaian.getAllPakaian);
+router.get('/pakaian/:id', AccessToken, pakaian.getPakaianById);
+router.post('/pakaian', AccessToken, pakaian.addPakaian);
+router.put('/pakaian/:id', AccessToken, pakaian.updatePakaian);
+router.delete('/pakaian/:id', AccessToken, pakaian.deletePakaian);
 
 const pelanggan = require('../controller/pelanggan');
 router.get('/pelanggan', AccessToken, pelanggan.getAllPelanggan);
