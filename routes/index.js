@@ -9,8 +9,10 @@ const login = require('../controller/login');
 router.post('/login', login.login);
 
 const transaction = require('../controller/transaksi');
-router.get('/transaksi', AccessToken, transaction.getAllTransaction);
-router.get('/transaksi/:id', AccessToken, transaction.getAllTransactionById);
+// todo : improve untuk perkalian
+router.get('/transaksi', AccessToken, transaction.getAllTransaksi);
+// todo : sama 
+router.get('/transaksi/:id', AccessToken, transaction.getTransaksiById);
 router.post('/transaksi', AccessToken, transaction.addTransaksi);
 router.put('/transaksi/:id', AccessToken, transaction.updateTransaksi);
 router.delete('/transaksi/:id', AccessToken, transaction.deleteTransaksi); 

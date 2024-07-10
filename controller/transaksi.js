@@ -10,8 +10,14 @@ const formatRupiah = (angka) => {
 };
 
 module.exports = {
-    getAllTransaction: async (req, res) => {
-        const sql = "SELECT t.*, (t.berat_transaksi * h.harga_perkilo) AS transaksi_harga FROM transaksi t JOIN harga h ON t.id_harga = h.id_harga WHERE id_transaksi = ?"
+    getAllTransaksi: async (req, res) => {
+        const sql = `
+            SELECT 
+                t.*, 
+                (t.berat_transaksi * h.harga_perkilo) AS transaksi_harga 
+            FROM transaksi t
+            JOIN harga h ON t.id_harga = h.id_harga
+        `;
 
         try {
             const transaksi = await new Promise((resolve, reject) => {
@@ -44,7 +50,7 @@ module.exports = {
             });
         }
     },
-    getAllTransactionById: async (req, res) => {
+    getTransaksiById: async (req, res) => {
         const id = req.params.id
         const sql = "SELECT t.*, (t.berat_transaksi * h.harga_perkilo) AS transaksi_harga FROM transaksi t JOIN harga h ON t.id_harga = h.id_harga WHERE id_transaksi = ?"
 
@@ -66,10 +72,12 @@ module.exports = {
                 })
             }
 
+            const transaksiData = transaksi[0]; 
+
             return res.status(200).json({
                 success: true,
                 message: "Success to get data",
-                data: transaksi
+                data: transaksiData
             })
         } catch (error) {
             console.error("Error fetching transactions:", error);
@@ -147,7 +155,7 @@ module.exports = {
                 message: 'Internal server error'
             });
         }
-    }, 
+    },
     updateTransaksi: async (req, res) => {
         const id = req.params.id
         const { id_transaksi, id_harga, id_pakaian, id_pelanggan, tanggal_masuk, pelanggan_transaksi, berat_transaksi, tanggal_selesai, status_transaksi } = req.body;
@@ -254,8 +262,6 @@ module.exports = {
     }, 
     generateTransaksiPDF: async (req, res) => {
         const id = req.params.id;
-        const sql = "SELECT t.*, (t.berat_transaksi * h.harga_perkilo) AS transaksi_harga FROM transaksi t JOIN harga h ON t.id_harga = h.id_harga WHERE t.id_transaksi = ?";
-        const sqlHarga = "SELECT * FROM harga";
 
         if (!id) {
             return res.status(400).json({
@@ -264,21 +270,27 @@ module.exports = {
             });
         }
 
+        const sql = `
+            SELECT 
+                t.*, 
+                h.harga_perkilo, 
+                p.nama_pelanggan, 
+                (t.berat_transaksi * h.harga_perkilo) AS transaksi_harga 
+            FROM 
+                transaksi t 
+            JOIN 
+                harga h ON t.id_harga = h.id_harga 
+            JOIN 
+                pelanggan p ON t.id_pelanggan = p.id_pelanggan 
+            WHERE 
+                t.id_transaksi = ?
+        `;
+
         try {
             const transaksiResult = await new Promise((resolve, reject) => {
                 connection.query(sql, [id], (error, results) => {
                     if (error) {
                         console.error("Error fetching transaksi:", error);
-                        return reject(error);
-                    }
-                    resolve(results);
-                });
-            });
-
-            const harga = await new Promise((resolve, reject) => {
-                connection.query(sqlHarga, (error, results) => {
-                    if (error) {
-                        console.error("Error fetching harga:", error);
                         return reject(error);
                     }
                     resolve(results);
@@ -292,20 +304,12 @@ module.exports = {
                 });
             }
 
-            if (harga.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'No harga found'
-                });
-            }
-
             const transaksi = transaksiResult[0];
-            const hargaKiloan = harga[0];
 
             const doc = new PDFDocument();
 
             res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `attachment; filename=transaksi_${id}.pdf`);
+            res.setHeader('Content-Disposition', `attachment; filename=invoice_${id}_${transaksi.nama_pelanggan}_${moment(transaksi.tanggal_selesai).format('YYYYMMDD')}.pdf`);
 
             doc.pipe(res);
 
@@ -316,12 +320,12 @@ module.exports = {
             doc.moveDown();
 
             const table = [
-                ['Nama Pelanggan:', transaksi.pelanggan_transaksi],
-                ['Tanggal Masuk:', moment(transaksi.tanggal_masuk).format('ddd - MMM - DD - YYYY')],
-                ['Tanggal Selesai:', moment(transaksi.tanggal_selesai).format('ddd - MMM - DD - YYYY')],
+                ['Nama Pelanggan:', transaksi.nama_pelanggan],
+                ['Tanggal Masuk:', moment(transaksi.tanggal_masuk).format('DD MMMM YYYY')],
+                ['Tanggal Selesai:', moment(transaksi.tanggal_selesai).format('DD MMMM YYYY')],
                 [''],
                 ['Berat Transaksi (kg):', `${transaksi.berat_transaksi} kg`],
-                ['Harga 1 Kilo:', formatRupiah(hargaKiloan.harga_perkilo)],
+                ['Harga 1 Kilo:', formatRupiah(transaksi.harga_perkilo)],
                 ['Total Harga:', formatRupiah(transaksi.transaksi_harga)],
                 ['Status:', transaksi.status_transaksi],
                 [''],

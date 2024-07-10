@@ -68,5 +68,8 @@ module.exports = {
                 message: "Internal server error",
             });
         }
+    }, 
+    inputPelanggan: async (req, res) => {
+        const sql = "INSERT INTO "
     }
 }
