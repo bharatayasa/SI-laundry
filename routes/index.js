@@ -12,6 +12,8 @@ const transaction = require('../controller/transaksi');
 router.get('/transaksi', AccessToken, transaction.getAllTransaction);
 router.get('/transaksi/:id', AccessToken, transaction.getAllTransactionById);
 router.post('/transaksi', AccessToken, transaction.addTransaksi);
+router.put('/transaksi/:id', AccessToken, transaction.updateTransaksi);
+router.delete('/transaksi/:id', AccessToken, transaction.deleteTransaksi); 
 
 const harga = require('../controller/harga');
 router.get('/harga', AccessToken, harga.getAllHarga);
