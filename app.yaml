@@ -1,0 +1,7 @@
+runtime: nodejs20
+service: default
+env: standard
+
+handlers:
+  - url: /.*
+    script: auto
