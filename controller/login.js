@@ -50,7 +50,10 @@ module.exports = {
                 return res.status(200).json({
                     success: true,
                     message: 'Login successful',
-                    token
+                    data: {
+                        user: user,
+                        token: token,
+                    },
                 });
             });
         } catch (error) {
