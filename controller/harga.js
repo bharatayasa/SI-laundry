@@ -1,5 +1,13 @@
 const connection = require('../config/database')
 
+
+const formatRupiah = (angka) => {
+    if (typeof angka !== 'number') {
+        angka = parseFloat(angka);
+    }
+    return angka.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
+};
+
 module.exports = {
     getAllHarga: async(req, res) => { 
         const sql = "SELECT * FROM harga"
@@ -21,10 +29,15 @@ module.exports = {
                 });
             }
 
+            const data = harga.map(h => ({
+                id_harga: h.id_harga,
+                harga_perkilo: formatRupiah(h.harga_perkilo)
+            }))
+
             return res.status(200).json({
                 success: true,
                 message: "Success to get data",
-                data: harga
+                data: data
             })
         } catch (error) {
             console.error("Error hashing password:", error);
