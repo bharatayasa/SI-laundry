@@ -29,6 +29,19 @@ module.exports = {
                 });
             });
 
+            const data = transaksi.map(t => ({
+                id_transaksi: t.id_transaksi,
+                // id_harga: t.id_harga,
+                id_pakaian: t.id_pakaian,
+                id_pelanggan: t.id_pelanggan,
+                tanggal_masuk: moment(t.tanggal_masuk).format('DD MMMM YYYY'),
+                // harga_transaksi: formatRupiah(t.harga_transaksi),
+                berat_transaksi: t.berat_transaksi,
+                tanggal_selesai: moment(t.tanggal_selesai).format('DD MMMM YYYY'),
+                status_transaksi: t.status_transaksi,
+                transaksi_harga: formatRupiah(t.transaksi_harga)
+            }));
+
             if (transaksi.length === 0) {
                 return res.status(404).json({
                     success: false,
@@ -40,7 +53,7 @@ module.exports = {
             return res.status(200).json({
                 success: true,
                 message: "Success to get data",
-                data: transaksi
+                data: data
             });
         } catch (error) {
             console.error("Error fetching transactions:", error);
@@ -88,19 +101,21 @@ module.exports = {
         }
     }, 
     addTransaksi: async (req, res) => {
-        const { id_harga, id_pakaian, id_pelanggan, tanggal_masuk, berat_transaksi, tanggal_selesai, status_transaksi } = req.body;
-
-        if (!id_harga || !id_pakaian || !id_pelanggan || !tanggal_masuk || !berat_transaksi || !tanggal_selesai || !status_transaksi) {
+        const { id_harga = 1, id_pakaian, id_pelanggan, tanggal_masuk, berat_transaksi, tanggal_selesai, status_transaksi } = req.body;
+        
+        const harga = id_harga;
+    
+        if (!id_pakaian || !id_pelanggan || !tanggal_masuk || !berat_transaksi || !tanggal_selesai || !status_transaksi) {
             return res.status(400).json({
                 success: false,
                 message: 'Please provide all required fields'
             });
         }
-
+    
         try {
             const hargaQuery = "SELECT harga_perkilo FROM harga WHERE id_harga = ?";
             const hargaResult = await new Promise((resolve, reject) => {
-                connection.query(hargaQuery, [id_harga], (error, results) => {
+                connection.query(hargaQuery, [harga], (error, results) => {
                     if (error) {
                         console.error("Error fetching harga:", error);
                         return reject(error);
@@ -108,22 +123,22 @@ module.exports = {
                     resolve(results);
                 });
             });
-
+    
             if (hargaResult.length === 0) {
                 return res.status(404).json({
                     success: false,
                     message: 'No harga found with the provided id_harga'
                 });
             }
-
+    
             const harga_perkilo = hargaResult[0].harga_perkilo;
             const transaksi_harga = berat_transaksi * harga_perkilo;
-
+    
             const sql = `INSERT INTO transaksi (id_harga, id_pakaian, id_pelanggan, tanggal_masuk, harga_transaksi, berat_transaksi, tanggal_selesai, status_transaksi, transaksi_harga) 
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
+    
             const transaksi = await new Promise((resolve, reject) => {
-                connection.query(sql, [id_harga, id_pakaian, id_pelanggan, tanggal_masuk, transaksi_harga, berat_transaksi, tanggal_selesai, status_transaksi, transaksi_harga], (error, result) => {
+                connection.query(sql, [harga, id_pakaian, id_pelanggan, tanggal_masuk, transaksi_harga, berat_transaksi, tanggal_selesai, status_transaksi, transaksi_harga], (error, result) => {
                     if (error) {
                         console.error("Error inserting transaksi:", error);
                         return reject(error);
@@ -131,13 +146,12 @@ module.exports = {
                     resolve(result);
                 });
             });
-
+    
             return res.status(201).json({
                 success: true,
                 message: 'Transaksi added successfully',
                 data: {
                     id_transaksi: transaksi.insertId,
-                    id_harga,
                     id_pakaian,
                     id_pelanggan,
                     tanggal_masuk,
@@ -154,7 +168,7 @@ module.exports = {
                 message: 'Internal server error'
             });
         }
-    },
+    },    
     updateTransaksi: async (req, res) => {
         const id = req.params.id
         const { id_transaksi, id_harga, id_pakaian, id_pelanggan, tanggal_masuk, berat_transaksi, tanggal_selesai, status_transaksi } = req.body;
