@@ -12,12 +12,14 @@ const formatRupiah = (angka) => {
 module.exports = {
     getAllTransaksi: async (req, res) => {
         const sql = `
-            SELECT 
-                t.*, 
-                (t.berat_transaksi * h.harga_perkilo) AS transaksi_harga 
-            FROM transaksi t
-            JOIN harga h ON t.id_harga = h.id_harga
-        `;
+                    SELECT 
+                        t.*, 
+                        p.nama_pelanggan,
+                        (t.berat_transaksi * h.harga_perkilo) AS transaksi_harga 
+                    FROM transaksi t
+                    JOIN harga h ON t.id_harga = h.id_harga
+                    JOIN pelanggan p ON t.id_pelanggan = p.id_pelanggan
+                `;
 
         try {
             const transaksi = await new Promise((resolve, reject) => {
@@ -31,11 +33,9 @@ module.exports = {
 
             const data = transaksi.map(t => ({
                 id_transaksi: t.id_transaksi,
-                // id_harga: t.id_harga,
-                id_pakaian: t.id_pakaian,
-                id_pelanggan: t.id_pelanggan,
+                id_pakaian : t.id_pakaian,
+                nama_pelanggan: t.nama_pelanggan,
                 tanggal_masuk: moment(t.tanggal_masuk).format('DD MMMM YYYY'),
-                // harga_transaksi: formatRupiah(t.harga_transaksi),
                 berat_transaksi: t.berat_transaksi,
                 tanggal_selesai: moment(t.tanggal_selesai).format('DD MMMM YYYY'),
                 status_transaksi: t.status_transaksi,
