@@ -5,6 +5,7 @@ const AccessToken = require('../middleware/auth');
 
 const register = require('../controller/register'); 
 router.post('/register', register.register);
+router.put('/change/password', register.changePassword);
 
 const login = require('../controller/login'); 
 router.post('/login', login.login);
