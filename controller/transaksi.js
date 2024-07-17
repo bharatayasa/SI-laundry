@@ -329,9 +329,9 @@ module.exports = {
 
             doc.fontSize(20).text('Laundry Service Invoice', { align: 'center' });
             doc.moveDown();
-            doc.fontSize(12).text('Laundry Service Company', { align: 'center' });
-            doc.text('Jl. Example No.123, Kota Example', { align: 'center' });
-            doc.text('Phone: (021) 12345678', { align: 'center' });
+            doc.fontSize(12).text('', { align: 'center' });
+            doc.text('JL.IR.H.JUANDA no.374 Denpasar Bali', { align: 'center' });
+            doc.text('Telp: 022-2506374 Hp: 0811228647', { align: 'center' });
             doc.moveDown();
 
             doc.fontSize(12).text(`Invoice ID: ${id}`, { align: 'left' });
