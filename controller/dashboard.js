@@ -166,5 +166,78 @@ module.exports = {
                 error: error
             });
         }
+    },
+    getTotalHargaTransaksiBulanIni: async (req, res) => {
+        const sql = `
+            SELECT SUM(harga_transaksi) as totalHarga 
+            FROM transaksi 
+            WHERE YEAR(tanggal_masuk) = YEAR(CURDATE()) 
+            AND MONTH(tanggal_masuk) = MONTH(CURDATE())
+        `;
+
+        try {
+            const totalHargaTransaksiBulanIni = await new Promise((resolve, reject) => {
+                connection.query(sql, (error, result) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(result);
+                    }
+                });
+            });
+
+            const data = formatRupiah(totalHargaTransaksiBulanIni[0].totalHarga)
+
+            return res.status(200).json({
+                message: "success to get total harga transaksi bulan ini",
+                data: data
+            });
+        } catch (error) {
+            return res.status(500).json({
+                message: "internal server error",
+                error: error
+            });
+        }
+    },
+    getSumTransaksiPerBulan: async (req, res) => {
+        const sql = `
+            SELECT 
+                YEAR(tanggal_masuk) as year, 
+                MONTH(tanggal_masuk) as month, 
+                SUM(harga_transaksi) as totalHarga 
+            FROM transaksi 
+            GROUP BY YEAR(tanggal_masuk), MONTH(tanggal_masuk)
+            ORDER BY YEAR(tanggal_masuk), MONTH(tanggal_masuk)
+        `;
+
+        try {
+            console.log("Running query:", sql); // Logging untuk debug
+
+            const sumTransaksiPerBulan = await new Promise((resolve, reject) => {
+                connection.query(sql, (error, result) => {
+                    if (error) {
+                        console.error("Query error:", error); // Logging error
+                        reject(error);
+                    } else {
+                        console.log("Query result:", result); // Logging hasil query
+                        resolve(result);
+                    }
+                });
+            });
+
+            console.log("Sum transaksi per bulan:", sumTransaksiPerBulan); // Logging hasil transaksi per bulan
+
+            return res.status(200).json({
+                message: "success to get sum transaksi per bulan",
+                data: sumTransaksiPerBulan
+            });
+        } catch (error) {
+            console.error("Internal server error:", error); // Logging error internal
+
+            return res.status(500).json({
+                message: "internal server error",
+                error: error
+            });
+        }
     }
 }

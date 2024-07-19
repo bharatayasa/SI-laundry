@@ -43,5 +43,7 @@ router.get('/total/pakaian', dashboard.getTotalPakaian);
 router.get('/lates/transaksi', dashboard.getLatestTransaksi);
 router.get('/sum/transaksi', dashboard.getTotalHargaTransaksi);
 router.get('/status/count', dashboard.getStatusCount);
+router.get('/sum/transaksi/bulan', dashboard.getTotalHargaTransaksiBulanIni);
+router.get('/sum/setiap/bulan', dashboard.getSumTransaksiPerBulan);
 
 module.exports = router;
