@@ -37,13 +37,12 @@ router.put('/pelanggan/:id', AccessToken, pelanggan.updatePelanggan);
 router.delete('/pelanggan/:id', AccessToken, pelanggan.deletePelanggan);
 
 const dashboard = require('../controller/dashboard');
-router.get('/total/pelanggan', dashboard.getTotalPelanggan);
-router.get('/total/transaksi', dashboard.getTotalTransaksi);
-router.get('/total/pakaian', dashboard.getTotalPakaian);
-router.get('/lates/transaksi', dashboard.getLatestTransaksi);
+router.get('/total/pelanggan', AccessToken, dashboard.getTotalPelanggan);
+router.get('/total/pakaian', AccessToken, dashboard.getTotalPakaian);
+router.get('/total/transaksi',AccessToken, dashboard.getTotalTransaksi);
 router.get('/sum/transaksi', dashboard.getTotalHargaTransaksi);
-router.get('/status/count', dashboard.getStatusCount);
 router.get('/sum/transaksi/bulan', dashboard.getTotalHargaTransaksiBulanIni);
-router.get('/sum/setiap/bulan', dashboard.getSumTransaksiPerBulan);
+router.get('/status/count', AccessToken, dashboard.getStatusCount);
+router.get('/sum/setiap/bulan', AccessToken, dashboard.getSumTransaksiPerBulan);
 
 module.exports = router;

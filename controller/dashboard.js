@@ -80,35 +80,6 @@ module.exports = {
             })
         }
     },
-    getLatestTransaksi: async (req, res) => {
-        const sql = `
-            SELECT * 
-            FROM transaksi 
-            WHERE DATE(tanggal_masuk) = CURDATE()
-        `;
-
-        try {
-            const latestTransaksi = await new Promise((resolve, reject) => {
-                connection.query(sql, (error, result) => {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve(result[0]);
-                    }
-                })
-            })
-
-            return res.status(200).json({
-                message: "success to get latest transaksi",
-                data: latestTransaksi
-            });
-        } catch (error) {
-            return res.status(500).json({
-                message: "internal server error",
-                error: error
-            });
-        }
-    }, 
     getTotalHargaTransaksi: async (req, res) => {
         const sql = "SELECT SUM(harga_transaksi) as totalHarga FROM transaksi";
 
@@ -211,28 +182,21 @@ module.exports = {
         `;
 
         try {
-            console.log("Running query:", sql); // Logging untuk debug
-
             const sumTransaksiPerBulan = await new Promise((resolve, reject) => {
                 connection.query(sql, (error, result) => {
                     if (error) {
-                        console.error("Query error:", error); // Logging error
                         reject(error);
                     } else {
-                        console.log("Query result:", result); // Logging hasil query
                         resolve(result);
                     }
                 });
             });
-
-            console.log("Sum transaksi per bulan:", sumTransaksiPerBulan); // Logging hasil transaksi per bulan
 
             return res.status(200).json({
                 message: "success to get sum transaksi per bulan",
                 data: sumTransaksiPerBulan
             });
         } catch (error) {
-            console.error("Internal server error:", error); // Logging error internal
 
             return res.status(500).json({
                 message: "internal server error",
