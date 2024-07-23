@@ -197,10 +197,40 @@ module.exports = {
                 data: sumTransaksiPerBulan
             });
         } catch (error) {
-
             return res.status(500).json({
                 message: "internal server error",
                 error: error
+            });
+        }
+    }, 
+    getSumTransaksiHariIni: async (req, res) => {
+        const sql = `
+            SELECT 
+                SUM(harga_transaksi) as totalHarga 
+            FROM transaksi 
+            WHERE tanggal_masuk = CURRENT_DATE
+        `;
+    
+        try {
+            const transaksiHariIni = await new Promise((resolve, reject) => {
+                connection.query(sql, (error, result) => {
+                    if (error) {
+                        return reject(error);
+                    }
+                    resolve(result);
+                });
+            });
+
+            const data = formatRupiah(transaksiHariIni[0].totalHarga)
+    
+            return res.status(200).json({
+                message: "success to get sum today",
+                data: data
+            });
+        } catch (error) {
+            return res.status(500).json({
+                message: "internal server error",
+                error: error.message
             });
         }
     }

@@ -7,6 +7,7 @@ const app = express();
 dotenv.config();
 
 const corsOptions = {
+    // origin: 'https://si-laundry.netlify.app',
     origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
